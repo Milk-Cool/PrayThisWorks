@@ -1,0 +1,25 @@
+{
+  "name": "praythisworks",
+  "version": "0.1.0",
+  "description": "A prayer's favorite programming language",
+  "main": "index.js",
+  "bin": "cli.js",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Milk-Cool/PrayThisWorks.git"
+  },
+  "keywords": [
+    "prayer",
+    "pray",
+    "programming",
+    "language",
+    "lang"
+  ],
+  "author": "Milk_Cool",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Milk-Cool/PrayThisWorks/issues"
+  },
+  "homepage": "https://github.com/Milk-Cool/PrayThisWorks#readme"
+}
