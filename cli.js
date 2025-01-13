@@ -39,4 +39,4 @@ const runAndPrint = prayer => {
 }
 
 const code = fs.readFileSync(positionals[0], "utf-8");
-runAndPrint(new Prayer(code));
+runAndPrint(new Prayer(code, positionals[0]));

@@ -1,3 +1,6 @@
+import fs from "fs";
+import { join, dirname } from "path";
+
 export class Prayer {
     static START_MAIN = "Hail";
     static START_MOD = "Holy";
@@ -5,6 +8,8 @@ export class Prayer {
     static TYPES = ["main", "mod"];
 
     static NEWLINE = "And";
+
+    static IMPORT = "with";
 
     static SET_VAR = "who";
     static VALUE = "as one would have".split(" ");
@@ -38,11 +43,12 @@ export class Prayer {
      * 
      * @param {string} code The code
      */
-    constructor(code) {
+    constructor(code, name = ":inline:") {
         this.vars = { ...Prayer.DEFAULT_VARS };
         this.index = 0;
         this.inString = false;
         this.string = "";
+        this.filename = name;
 
         this.code = code + "\n"; // CRUTCH
         this.error = "";
@@ -125,6 +131,14 @@ export class Prayer {
         return value;
     }
 
+    makeError(name, description) {
+        const before = this.code.slice(0, this.index);
+        const split = before.split(/\r\n|\r|\n/);
+        const lines = split.length + 1;
+        const char = split[split.length - 1].length;
+        this.error = `${name} error: ${description}\n  at ${this.filename}:${lines}:${char}\n`;
+    }
+
     parseWord() {
         if(this.index == this.code.length) return Prayer.STOP;
         const str = this.readWord();
@@ -171,6 +185,25 @@ export class Prayer {
                 varName.push(word);
             varName = varName.join(" ");
             this.output += this.vars[varName] + "\n";
+        } else if(str == Prayer.IMPORT) {
+            const modName = join(dirname(this.filename), this.readString());
+            if(!fs.existsSync(modName)) {
+                this.makeError("module", "module not found: " + modName);
+                return Prayer.STOP;
+            }
+            const file = fs.readFileSync(modName, "utf-8");
+            const prayer = new Prayer(file, modName);
+            const [type, _name, error, out, vars] = prayer.run();
+            if(type !== "mod") {
+                this.makeError("module", "is not a module: " + modName);
+                return Prayer.STOP;
+            } else if(error) {
+                this.makeError("module", "error in module: " + modName);
+                this.error += error;
+                return Prayer.STOP;
+            }
+            this.output += out;
+            this.vars = Object.assign(this.vars, vars);
         }
         else if(str == Prayer.END) return Prayer.STOP;
     }
