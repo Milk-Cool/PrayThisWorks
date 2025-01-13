@@ -14,6 +14,15 @@ export class Prayer {
     static SET_VAR = "who";
     static VALUE = "as one would have".split(" ");
 
+    static LAMBDA = "may";
+    static PARAMS = "get";
+    static PARAMS_SEP = "and";
+    static PARAMS_END = "while";
+    static CALL = "will";
+    static CALL_PARAMS = "have";
+    static CALL_PARAMS_SEP = "and";
+    static CALL_PARAMS_END = "peacefully";
+
     static MATH = "thought as one would have".split(" ");
     static STRING = "said".split(" ");
 
@@ -42,10 +51,13 @@ export class Prayer {
      * Constructs the object.
      * 
      * @param {string} code The code
+     * @param {string} name The filename
+     * @param {number} [start=0] The starting pos
+     * @param {object} [vars=Prayer.DEFAULT_VARS] The starting variables
      */
-    constructor(code, name = ":inline:") {
-        this.vars = { ...Prayer.DEFAULT_VARS };
-        this.index = 0;
+    constructor(code, name = ":inline:", start = 0, vars = Prayer.DEFAULT_VARS) {
+        this.vars = { ...vars };
+        this.index = start;
         this.inString = false;
         this.string = "";
         this.filename = name;
@@ -204,6 +216,72 @@ export class Prayer {
             }
             this.output += out;
             this.vars = Object.assign(this.vars, vars);
+        } else if(str == Prayer.LAMBDA) {
+            let lambdaName = [];
+            while(true) {
+                const part = this.readWord();
+                if(part == Prayer.PARAMS) break;
+                lambdaName.push(part);
+            }
+            lambdaName = lambdaName.join(" ");
+            let params = [], currentParam = [];
+            while(true) {
+                const param = this.readWord();
+                currentParam.push(param);
+                const after = this.peekWord()[0];
+                if(after == Prayer.PARAMS_END) {
+                    params.push(currentParam.join(" "));
+                    this.readWord();
+                    break;
+                }
+                else if(after == Prayer.PARAMS_SEP) {
+                    params.push(currentParam.join(" "));
+                    currentParam = [];
+                    this.readWord();
+                }
+            }
+            this.vars[lambdaName] = [this.index, params, this.filename];
+            let word;
+            while(!Prayer.END_INSTRUCTION.includes(word = this.readWord()));
+        } else if(str == Prayer.CALL) {
+            let lambdaName = [];
+            // TODO: readUntil function maybe?
+            while(true) {
+                const part = this.readWord();
+                if(part == Prayer.CALL_PARAMS) break;
+                lambdaName.push(part);
+            }
+            lambdaName = lambdaName.join(" ");
+            let params = [], currentParam = [];
+            while(true) {
+                const param = this.readWord();
+                currentParam.push(param);
+                const after = this.peekWord()[0];
+                if(after == Prayer.CALL_PARAMS_END) {
+                    params.push(currentParam.join(" "));
+                    this.readWord();
+                    break;
+                }
+                else if(after == Prayer.CALL_PARAMS_SEP) {
+                    params.push(currentParam.join(" "));
+                    currentParam = [];
+                    this.readWord();
+                }
+            }
+            const lambda = this.vars[lambdaName];
+            params = params.map((x, i) => [lambda[1][i], this.vars[x]]);
+            params = Object.fromEntries(params);
+            // TODO: cahced read
+            const file = fs.readFileSync(lambda[2], "utf-8");
+            const prayer = new Prayer(file, lambda[2], lambda[0], params);
+            prayer.parseWord();
+            if(prayer.error) {
+                this.makeError("lambda", "error in lambda: " + lambdaName);
+                this.error += error;
+                return Prayer.STOP;
+            }
+            this.output += prayer.output;
+            this.vars = Object.assign(this.vars, prayer.vars);
         }
         else if(str == Prayer.END) return Prayer.STOP;
     }
