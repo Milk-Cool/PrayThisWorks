@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "A prayer's favorite programming language",
   "main": "index.js",
-  "bin": "cli.js",
+  "bin": {
+    "pray": "cli.js"
+  },
   "type": "module",
   "repository": {
     "type": "git",
