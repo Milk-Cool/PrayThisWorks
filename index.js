@@ -9,6 +9,7 @@ export class Prayer {
     static SET_VAR = "who";
     static VALUE = "as one would have".split(" ");
 
+    static MATH = "thought as one would have".split(" ");
     static STRING = "said".split(" ");
 
     static PRINT = "talked";
@@ -98,6 +99,32 @@ export class Prayer {
         return this.string;
     }
 
+    calc() {
+        let value = 0, operation = "+", varName = "";
+        const exec = () => operation == "+"
+            ? value += parseFloat(this.vars[varName])
+            : operation == "-"
+            ? value -= parseFloat(this.vars[varName])
+            : null;
+        while(true) {
+            const w = this.readWord();
+            if(Prayer.END_INSTRUCTION.includes(w)) break;
+            else if(w == Prayer.ADD) {
+                exec();
+                operation = "+";
+                varName = "";
+            } else if(w == Prayer.SUB) {
+                exec();
+                operation = "-";
+                varName = "";
+            } else {
+                varName += `${varName.length == 0 ? "" : " "}${w}`;
+            }
+        }
+        exec();
+        return value;
+    }
+
     parseWord() {
         if(this.index == this.code.length) return Prayer.STOP;
         const str = this.readWord();
@@ -119,7 +146,15 @@ export class Prayer {
             const first = this.readWord();
             if(Prayer.END_INSTRUCTION.includes(first)) return this.vars[varName] = "";
             else if(Prayer.STRING.includes(first)) value = this.readString();
-            else {
+            else if(first == Prayer.MATH[0]) {
+                index = 1;
+                while(true) {
+                    word = this.peekWord()[0];
+                    if(word != Prayer.MATH[index++]) break;
+                    this.readWord();
+                }
+                value = this.calc();
+            } else {
                 value = first;
                 let word;
                 while(!Prayer.END_INSTRUCTION.includes(word = this.readWord()))
