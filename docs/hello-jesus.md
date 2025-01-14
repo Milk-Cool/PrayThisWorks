@@ -63,5 +63,5 @@ Variables:
 { saved: 1, 'had forgiven': 'Hello Jesus!' }
 ```
 
-> [!NOTE]
+> Note:\
 > `saved` is a predefined variable always equal to `1`.
