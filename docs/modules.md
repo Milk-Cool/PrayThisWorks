@@ -41,6 +41,6 @@ Output:
 Hello Jesus!
 ```
 Variables:
-```
+```js
 { saved: 1, 'had forgiven': 'Hello Jesus!' }
 ```
