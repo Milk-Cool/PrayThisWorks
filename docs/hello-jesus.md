@@ -49,7 +49,7 @@ marks the end of a program.
 
 ## Result
 ```
-Hail Mary,
+Hail Lucy,
 who had forgiven as one would have said ,Hello Jesus!',
 And talked as one would have had forgiven.
 Amen.
