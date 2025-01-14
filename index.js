@@ -1,5 +1,6 @@
 import fs from "fs";
 import { join, dirname } from "path";
+import { readFileSync } from "./cache.js";
 
 export class Prayer {
     static START_MAIN = "Hail";
@@ -217,7 +218,7 @@ export class Prayer {
                 this.makeError("module", "module not found: " + modName);
                 return Prayer.STOP;
             }
-            const file = fs.readFileSync(modName, "utf-8");
+            const file = readFileSync(modName, "utf-8");
             const prayer = new Prayer(file, modName);
             const [type, _name, error, out, vars] = prayer.run();
             if(type !== "mod") {
@@ -286,7 +287,7 @@ export class Prayer {
             params = params.map((x, i) => [lambda[1][i], this.vars[x]]);
             params = Object.fromEntries(params);
             // TODO: cahced read
-            const file = fs.readFileSync(lambda[2], "utf-8");
+            const file = readFileSync(lambda[2], "utf-8");
             const prayer = new Prayer(file, lambda[2], lambda[0], params);
             prayer.parseWord();
             if(prayer.error) {
