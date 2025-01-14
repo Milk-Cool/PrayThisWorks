@@ -30,6 +30,8 @@ export class Prayer {
 
     static ADD = "and";
     static SUB = "nor";
+    static MUL = "though";
+    static DIV = "while";
     
     static END = "Amen";
     static END_INSTRUCTION = [Prayer.NEWLINE, Prayer.END];
@@ -123,6 +125,10 @@ export class Prayer {
             ? value += parseFloat(this.vars[varName])
             : operation == "-"
             ? value -= parseFloat(this.vars[varName])
+            : operation == "*"
+            ? value *= parseFloat(this.vars[varName])
+            : operation == "/"
+            ? value /= parseFloat(this.vars[varName])
             : null;
         while(true) {
             const w = this.readWord();
@@ -134,6 +140,14 @@ export class Prayer {
             } else if(w == Prayer.SUB) {
                 exec();
                 operation = "-";
+                varName = "";
+            } else if(w == Prayer.MUL) {
+                exec();
+                operation = "*";
+                varName = "";
+            } else if(w == Prayer.DIV) {
+                exec();
+                operation = "/";
                 varName = "";
             } else {
                 varName += `${varName.length == 0 ? "" : " "}${w}`;
