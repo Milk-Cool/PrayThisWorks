@@ -5,7 +5,7 @@ In this article, we'll walk through how to create and import modules in Praylang
 ## Creating modules
 First of all, you'll have to define a module in a separate file like this:
 ```
-Holy Olg,
+Holy Olga,
 ```
 Note how we use `Holy` here instead of `Hail`. We can define [variables](variables.md) and [lambdas](lambdas.md) in this file.
 
