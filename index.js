@@ -11,6 +11,7 @@ export class Prayer {
     static NEWLINE = "And";
 
     static IMPORT = "with";
+    static BY_NAME = "Saint";
 
     static SET_VAR = "who";
     static VALUE = "as one would have".split(" ");
@@ -166,6 +167,13 @@ export class Prayer {
         this.error = `${name} error: ${description}\n  at ${this.filename}:${lines}:${char}\n`;
     }
 
+    listFiles(path) {
+        if(fs.statSync(path).isDirectory())
+            return fs.readdirSync(path).map(x => this.listFiles(join(path, x))).flat();
+        else
+            return path;
+    }
+
     parseWord() {
         if(this.index == this.code.length) return Prayer.STOP;
         const str = this.readWord();
@@ -213,6 +221,29 @@ export class Prayer {
             varName = varName.join(" ");
             this.output += this.vars[varName] + "\n";
         } else if(str == Prayer.IMPORT) {
+            if(this.peekWord()[0] == Prayer.BY_NAME) {
+                this.readWord();
+                const name = this.readWord();
+                const files = this.listFiles(dirname(this.filename));
+                for(const file of files) {
+                    const content = readFileSync(file, "utf-8");
+                    const prayer = new Prayer(content);
+                    prayer.readTypeAndName();
+                    if(prayer.type === "main") continue;
+                    if(prayer.name !== name) continue;
+                    const [_type, _name, error, out, vars] = prayer.runWOTypeAndName();
+                    if(error) {
+                        his.makeError("module", "error in module by name: " + name);
+                        this.error += error;
+                        return Prayer.STOP;
+                    }
+                    this.output += out;
+                    this.vars = Object.assign(this.vars, vars);
+                    return;
+                }
+                this.makeError("module", "module not found by name: " + name);
+                return Prayer.STOP;
+            }
             const modName = join(dirname(this.filename), this.readString());
             if(!fs.existsSync(modName)) {
                 this.makeError("module", "module not found: " + modName);
@@ -302,16 +333,20 @@ export class Prayer {
     }
 
     /**
-     * Runs the program.
+     * Reads the type and the name and saves them to this.type and this.name.
+     */
+    readTypeAndName() {
+        this.type = Prayer.TYPES[[Prayer.START_MAIN, Prayer.START_MOD].indexOf(this.readWord())];
+        this.name = this.readWord();
+    }
+
+
+    /**
+     * Runs the program without reading type and name.
      * 
      * @returns {[string, string, string, string, object]} The type, the name, the error, the output and the variables
      */
-    run() {
-        const type = Prayer.TYPES[[Prayer.START_MAIN, Prayer.START_MOD].indexOf(this.readWord())];
-        const name = this.readWord();
-        // this.readWord();
-        // console.log(name, type);
-
+    runWOTypeAndName() {
         while(true) {
             if(this.index == this.code.length)
                 break;
@@ -319,6 +354,16 @@ export class Prayer {
             if(this.parseWord() === Prayer.STOP)
                 break;
         }
-        return [type, name, this.error, this.output, this.vars];
+        return [this.type, this.name, this.error, this.output, this.vars];
+    }
+
+    /**
+     * Runs the program.
+     * 
+     * @returns {[string, string, string, string, object]} The type, the name, the error, the output and the variables
+     */
+    run() {
+        this.readTypeAndName();
+        return this.runWOTypeAndName();
     }
 }
